@@ -1,0 +1,5 @@
+package com.example.languagetranslator
+
+data class TranslationResponse(
+    val translatedText: String
+)
