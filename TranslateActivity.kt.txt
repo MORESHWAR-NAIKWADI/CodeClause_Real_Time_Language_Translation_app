@@ -1,0 +1,61 @@
+package com.example.languagetranslator
+
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+class TranslateActivity : AppCompatActivity() {
+    private lateinit var inputText: EditText
+    private lateinit var translateButton: Button
+    private lateinit var translatedText: TextView
+
+    private val baseUrl = "https://api.yourtranslationapi.com/" // Use your translation API base URL
+    private lateinit var translationService: TranslationService
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_translate)
+
+        inputText = findViewById(R.id.inputText)
+        translateButton = findViewById(R.id.translateButton)
+        translatedText = findViewById(R.id.translatedText)
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        translationService = retrofit.create(TranslationService::class.java)
+
+        translateButton.setOnClickListener {
+            translateText()
+        }
+    }
+
+    private fun translateText() {
+        val text = inputText.text.toString()
+        val targetLanguage = "es" // Set the target language code (e.g., "es" for Spanish)
+        val sourceLanguage = "en" // Set the source language code (e.g., "en" for English)
+
+        translationService.translate(text, targetLanguage, sourceLanguage).enqueue(object : Callback<TranslationResponse> {
+            override fun onResponse(call: Call<TranslationResponse>, response: Response<TranslationResponse>) {
+                if (response.isSuccessful) {
+                    translatedText.text = response.body()?.translatedText ?: "Translation failed."
+                } else {
+                    translatedText.text = "Error: ${response.code()}"
+                }
+            }
+
+            override fun onFailure(call: Call<TranslationResponse>, t: Throwable) {
+                translatedText.text = "Failure: ${t.message}"
+            }
+        })
+    }
+}
